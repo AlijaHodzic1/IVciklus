@@ -1,0 +1,2 @@
+Ovo je log.txt file.
+Korisnik pristupio /data u 6:03:12 PM
