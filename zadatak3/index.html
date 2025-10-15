@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="sr">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Express Domaći</title>
+	</head>
+	<body>
+		<h1>Express Domaći</h1>
+
+		<h2>Dodaj korisnika</h2>
+		<form id="userForm">
+			<input
+				type="text"
+				id="name"
+				placeholder="Ime"
+				required />
+			<input
+				type="number"
+				id="age"
+				placeholder="Godine"
+				required />
+			<button type="submit">Pošalji</button>
+		</form>
+
+		<h2>Pošalji feedback</h2>
+		<form id="feedbackForm">
+			<input
+				type="text"
+				id="message"
+				placeholder="Tvoja poruka"
+				required />
+			<button type="submit">Pošalji</button>
+		</form>
+
+		<h2>Test GET rute</h2>
+		<a href="/about">O nama</a><br />
+		<a href="/user/Marko">Zdravo, Marko</a><br />
+		<a href="/search?query=node&category=backend">Pretraga primer</a><br />
+		<a href="/users">Prikaži korisnike</a><br />
+		<a href="/math/6/4">Zbir dva broja</a><br />
+		<a href="/multiply?n1=2&n2=4">Proizvod dva broja</a><br />
+		<script>
+			document
+				.getElementById("userForm")
+				.addEventListener("submit", async (e) => {
+					e.preventDefault();
+					const name = document.getElementById("name").value;
+					const age = document.getElementById("age").value;
+
+					const res = await fetch("/add-user", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ name, age }),
+					});
+
+					const data = await res.text();
+					alert(data);
+				});
+
+			document
+				.getElementById("feedbackForm")
+				.addEventListener("submit", async (e) => {
+					e.preventDefault();
+					const message = document.getElementById("message").value;
+
+					const res = await fetch("/feedback", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ message }),
+					});
+
+					const data = await res.text();
+					alert(data);
+				});
+		</script>
+	</body>
+</html>
