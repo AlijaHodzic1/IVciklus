@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Check Test</title>
+</head>
+<body>
+  <h1>Provera middleware-a</h1>
+  <button id="send">Pošalji zahtev</button>
+
+  <script>
+    document.getElementById('send').addEventListener('click', () => {
+      fetch('http://localhost:3000/', {
+        headers: {
+          'X-Student': 'Alija'
+        }
+      })
+        .then(res => res.text())
+        .then(data => alert(data))
+        .catch(err => alert('Greška: ' + err));
+    });
+  </script>
+</body>
+</html>
