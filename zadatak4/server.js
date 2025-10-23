@@ -34,14 +34,6 @@ const checkRole = (req, res, next) => {
 	next();
 };
 
-app.get("/dashboard", checkRole, (req, res) => {
-	res.send("Dobrodosao na admin dashboard!");
-});
-
-app.get("/profile", (req, res) => {
-	res.send("Ovo je korisnicki profil.");
-});
-
 // Zavrsen drugi zadatak, kreirati middleware koji proverava role
 // za pristup admin dashboard stranici.
 
@@ -63,11 +55,79 @@ const checkAuth = (req, res, next) => {
 	next();
 };
 
+// Zavrsen 3- Middleware lanac, tjst check time i check auth.
+
+const nonExist = (req, res, next) => {
+	res.status(404).send("<h2>404 - Stranica nije pronadjena.</h2>");
+};
+
+// Zavrsen 4. Globalni 404 middleware
+
+const validateRegister = (req, res, next) => {
+	const { username, password, email } = req.body;
+	if (
+		!username ||
+		username.length < 3 ||
+		!password ||
+		password.length < 3 ||
+		!email ||
+		!email.includes("@")
+	) {
+		return res.status(400).json({ error: "Podaci nisu validni!" });
+	}
+	next();
+};
+
+// Zavrsen 5. middleware: provera pravilne registracije za post request.
+
+const checkVip = (req, res, next) => {
+	const { vip } = req.query;
+	if (vip !== "true") {
+		return res.status(403).send("Pristup dozvoljen samo vip korisnicima!");
+	}
+	next();
+};
+
+//Zavrsen 6. zadatak= VIP ruta, query vezba
+
+const timer = (req, res, next) => {
+	const vSad = Date.now();
+	res.on("finish", () => {
+		const duration = Date.now() - vSad;
+		console.log(`Request ${req.method} ${req.url} obradjen u ${duration} ms.`);
+	});
+	next();
+};
+app.use(timer);
+//Zavrsen bonus zadatak.
+
+// Rute
+
+app.get("/dashboard", checkRole, (req, res) => {
+	res.send("Dobrodosao na admin dashboard!");
+});
+
+app.get("/profile", (req, res) => {
+	res.send("Ovo je korisnicki profil.");
+});
+
 app.get("/secret", checkTime, checkAuth, (req, res) => {
 	res.send("Dobrodošli u tajnu sekciju!");
 });
 
-console.log("test");
+app.post("/register", validateRegister, (req, res) => {
+	res.json({ message: "Uspesno registrovan korisnik!" });
+});
+
+app.get("/public-info", (req, res) => {
+	res.send("Ovo je javna informacija.");
+});
+
+app.get("/vip-info", checkVip, (req, res) => {
+	res.send("Dozvoljen pristup vip informacijama.");
+});
+// Rute
+app.use(nonExist);
 
 app.listen(PORT, () => {
 	console.log("server uspesno pokrenut na url-u: http://localhost:3000");
