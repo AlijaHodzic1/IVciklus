@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Courses = require("../data/course");
-const studentValidation = require("../middleware/studentValidation");
+const courseValidation = require("../middleware/courseValidation");
+const logger = require("../middleware/logger");
+
+router.use(logger);
 
 router.get("/", (req, res) => {
 	res.json(Courses);
@@ -14,11 +17,11 @@ router.get("/:id", (req, res) => {
 	res.json(course);
 });
 
-router.post("/", studentValidation, (req, res) => {
-	const { title, description, duration, level } = req.body;
+router.post("/", courseValidation, (req, res) => {
+	const { name, description, duration, level } = req.body;
 	const newCourse = {
 		id: Courses.length + 1,
-		title,
+		name,
 		description,
 		duration,
 		level,
@@ -27,14 +30,14 @@ router.post("/", studentValidation, (req, res) => {
 	res.sendStatus(201);
 });
 
-router.put("/:id", studentValidation, (req, res) => {
+router.put("/:id", courseValidation, (req, res) => {
 	const id = +req.params.id;
 	const index = Courses.findIndex((c) => c.id === id);
 
 	if (index === -1) return res.sendStatus(404);
 
-	const { title, description, duration, level } = req.body;
-	Courses[index] = { title, description, duration, level };
+	const { name, description, duration, level } = req.body;
+	Courses[index] = { name, description, duration, level };
 });
 
 router.patch("/:id", (req, res) => {
@@ -43,9 +46,9 @@ router.patch("/:id", (req, res) => {
 
 	if (!course) return res.sendStatus(404);
 
-	const { title, description, duration, level } = req.body;
+	const { name, description, duration, level } = req.body;
 
-	if (title) course.title = title;
+	if (name) course.name = name;
 	if (description) course.description = description;
 	if (duration) course.duration = duration;
 	if (level) course.level = level;

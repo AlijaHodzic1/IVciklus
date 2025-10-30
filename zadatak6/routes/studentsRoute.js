@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const Students = require("../data/books");
+const Students = require("../data/students");
 const studentValidation = require("../middleware/studentValidation");
+const logger = require("../middleware/logger");
+
+router.use(logger);
 
 router.get("/", (req, res) => {
 	res.json(Students);
