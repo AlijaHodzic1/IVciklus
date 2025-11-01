@@ -8,10 +8,13 @@ router.get("/", (req, res) => {
 });
 
 // GET /users/:id/borrowed
-router.get("/borrowed", (req, res) => {
-	const borrowedBookIds = users.flatMap((u) => u.borrowedBooks);
-	const borrowedBooks = books.filter((b) => borrowedBookIds.includes(b.id));
+router.get("/:id/borrowed", (req, res) => {
+	const userId = +req.params.id;
+	const user = users.find((u) => u.id === userId);
 
+	if (!user) return res.status(404).send("Nije pronadjen");
+
+	const borrowedBooks = books.filter((b) => user.borrowedBooks.includes(b.id));
 	res.json(borrowedBooks);
 });
 
