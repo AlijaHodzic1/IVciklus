@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const receptRoutes = require("./routes/recepti");
+const studentRoutes = require("./routes/studenti");
 const mongoose = require("mongoose");
 
 mongoose
@@ -15,6 +16,7 @@ mongoose
 
 app.use(express.json());
 app.use("/recepti", receptRoutes);
+app.use("/studenti", studentRoutes);
 
 app.listen(3000, () => {
 	console.log("Povezan sa serverom.");

@@ -1,122 +1,196 @@
-# Domaći zadatak – Osnovne CRUD operacije u MongoDB + Express
-
-## Cilj:
-
-Napraviti Express server povezan sa MongoDB bazom (Atlas ili lokalni Compass), koji podržava osnovne CRUD operacije nad zadatim modelom.
-
----
-
-## Zadatak:
-
-Napravi novi folder projekta, npr. `crud-zadatak`.
-
-Instaliraj potrebne pakete:
-
+## Kako pokrenuti projekat (kratko)
+1. Napravite folder projekta, npr. `crud-zadatak`.
+2. U terminalu pokrenite:
 ```bash
 npm init -y
 npm install express mongoose dotenv
 ```
+3. Napravite fajlove i foldere prema instrukcijama u nastavku.
+4. U `.env` fajlu dodajte `MONGO_URI` (vaš Atlas ili lokalni connection string).
+5. Pokrenite server:
+```bash
+node server.js
+```
 
-Struktura projekta treba da izgleda ovako:
+---
 
+## Struktura projekta
+```
 crud-zadatak/
 ├── models/
-│ └── Recept.js
+│   └── Recept.js
 ├── controllers/
-│ └── recepti.js
+│   └── recepti.js
 ├── routes/
-│ └── recepti.js
-├── server.js
-└── .env
+│   └── recepti.js
+├── .env
+└── package.json
+```
 
-U .env fajlu treba da stoji vaš MONGO_URI string za konekciju.
+---
 
-1. Napravi Model (Recept.js)
+## .env fajl
+U `.env` ubacite:
+```
+MONGO_URI=your_mongo_connection_string_here
+```
 
-Vaš prvi zadatak je da sami definišete Mongoose šemu za model Recept. Razmislite koja su polja (podaci) potrebna za opis jednog recepta.
+---
 
-U fajlu models/Recept.js definišite šemu.
+## Primer modela: `models/Recept.js`
 
 ```js
 const mongoose = require('mongoose');
 
 const receptSchema = new mongoose.Schema({
-  // TODO: Definišite polja (fields) za recept
-  //
-  // Potrebno je dodati najmanje 4 polja po izboru.
-  // Primeri polja (ne morate koristiti ova):
-  //
-  // naziv: { type: String, required: true },
-  // uputstvo: { type: String, required: true },
-  // vremePripreme: { type: Number }, // (u minutima)
-  // kategorija: { type: String, default: 'Ostalo' },
-  // sastojci: [String] // Primer korišćenja niza!
+  naziv: { type: String, required: true },
+  uputstvo: { type: String, required: true },
+  vremePripreme: { type: Number }, // u minutima
+  kategorija: { type: String, default: 'Ostalo' },
+  sastojci: [String]
 });
 
 module.exports = mongoose.model('Recept', receptSchema);
 ```
 
-Napravi kontroler sa CRUD funkcijama
+---
 
-U fajlu controllers/recepti.js napišite funkcije koje će obrađivati zahteve
+## CRUD kontroler za recepte: `controllers/recepti.js`
 
-POST, GET, GET (id), PUT, PATCH, DELETE
+ODRADITI ZA SVE RUTE!!!
 
-3. Napravi route datoteku
+---
 
-U fajlu routes/recepti.js povežite HTTP metode i rute sa funkcijama iz kontrolera.
-
-4. Server setup
-
-Na kraju, u server.js povežite sve delove.
+## Rute za recepte: `routes/recepti.js`
 
 ```js
-require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
-const receptRoutes = require('./routes/recepti'); // Ispravljena putanja
+const router = express.Router();
+const ctrl = require('../controllers/recepti');
 
-const app = express();
+router.post('/', ctrl.createRecept);
+router.get('/', ctrl.getAllRecepti);
+router.get('/:id', ctrl.getRecept);
+router.put('/:id', ctrl.replaceRecept);
+router.patch('/:id', ctrl.updateRecept);
+router.delete('/:id', ctrl.deleteRecept);
 
-// Middleware za parsiranje JSON-a
-app.use(express.json());
-
-// Osnovna ruta za recepte
-// Svi zahtevi koji počinju sa /recepti biće prosleđeni receptRoutes
-app.use('/recepti', receptRoutes);
-
-// Konekcija na bazu
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log('Povezan sa bazom'))
-  .catch(err => console.log('Nije povezan sa bazom', err));
-
-// Pokretanje servera
-app.listen(3000, () => console.log('Server radi na portu 3000'));
+module.exports = router;
 ```
 
-Testiranje
+---
 
-U VSCode Thunder Client-u ili Postman aplikaciji, testirajte sledeće rute. Obavezno postavite Content-Type header na application/json za POST, PUT i PATCH zahteve i pošaljite validan JSON u body.
+## Realan primer students API sa filterima i paginacijom
 
-POST	/recepti	Dodaj novi recept	{ "naziv": "Palačinke", "vremePripreme": 30, ... }
+### Kontroler: `students/controllers/studentController.js`
 
-GET	/recepti	Vrati sve recepte	(Nema body)
+```js
+const Student = require('../models/Student');
 
-GET	/recepti/:id	Vrati jedan recept (zamenite :id sa pravim ID-jem)	(Nema body)
+exports.getAllStudents = async (req, res) => {
+  const filters = {};
+  
+  // ... neki filteri idu ove ...
 
-PUT	/recepti/:id	Zameni ceo dokument recepta	{ "naziv": "Američke palačinke", ... }
+  // Sort, paginacija
+  const sortField = req.query.sortBy || 'age';
+  const sortOrder = req.query.order === 'desc' ? -1 : 1;
+  const limit = Number(req.query.limit) || 10;
+  const page = Number(req.query.page) || 1;
+  const skip = (page - 1) * limit;
 
-PATCH	/recepti/:id	Ažuriraj delimično recept	{ "vremePripreme": 25 }
+  try {
+    const total = await Student.countDocuments(filters);
+    const students = await Student.find(filters)
+      .sort({ [sortField]: sortOrder })
+      .skip(skip)
+      .limit(limit);
 
-DELETE	/recepti/:id	Obriši recept	(Nema body)
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
 
-1. Dodati 10+ različitih recepata ručno preko Postman-a (koristeći POST rutu).
+    res.json({
+      page,
+      totalPages,
+      total,
+      hasNextPage,
+      hasPrevPage,
+      nextPage: hasNextPage ? page + 1 : null,
+      prevPage: hasPrevPage ? page - 1 : null,
+      students
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Greška pri dohvatanju studenata', error: err.message });
+  }
+};
+```
 
-2. Otvoriti MongoDB Compass (ili Atlas UI), povezati se na bazu i proveriti da li vidite dokumente u kolekciji recepts.
+---
 
-3. Pokušajte da izmenite jedan dokument (npr. promenite vreme pripreme) direktno u Compass-u.
 
-4. Pokušajte da obrišete jedan dokument direktno iz Compass-a.
+## Primer odgovora (paginacija) — format koji frontend očekuje
 
-5. Proverite da li vaša API aplikacija (GET ruta) i dalje radi ispravno i prikazuje promene koje ste napravili u Compass-u.
+```json
+{
+  "page": 2,
+  "totalPages": 5,
+  "total": 23,
+  "hasNextPage": true,
+  "hasPrevPage": true,
+  "nextPage": 3,
+  "prevPage": 1,
+  "students": [
+    { "name": "Jovan", "city": "Beograd", "age": 21 },
+    ...
+  ]
+}
+```
+
+---
+
+## Primeri zahteva (Postman / Thunder Client)
+
+- `GET /students?city=Beograd`
+- `GET /students?excludeCity=Beograd`
+- `GET /students?olderThan=18`
+- `GET /students?youngerThan=25`
+- `GET /students?minAge=18&maxAge=25`
+- `GET /students?cities=Beograd,Novi%20Sad`
+- `GET /students?excludeCities=Niš,Kragujevac`
+- `GET /students?nameContains=an`
+- `GET /students?city=Novi%20Pazar&minAge=18`
+- `GET /students?limit=5&page=2&sortBy=age&order=desc`
+
+---
+
+## Compass / Atlas – praktični saveti za filtere
+
+U Compass/Atlas filter polju pišite JSON sa poljem na vrhu:
+
+**Ispravno:**
+```json
+{ "name": { "$regex": "an", "$options": "i" } }
+{ "city": { "$in": ["Beograd", "Novi Sad"] } }
+{ "age": { "$gte": 18, "$lte": 25 } }
+```
+
+**Pogrešno:**
+```json
+{ "$regex": "an" }  // ovo neće raditi (unknown top level operator)
+```
+
+---
+
+## Domaći zadaci (konkretno) - Ko je odradio prosli domaci ne radi zadatke od 1 do 4
+
+1. Napravite projekat kao gore i implementirajte `Recept` model i rute.
+2. Dodajte 10+ recepata ručno koristeći Postman (POST /recepti).
+3. Povežite se sa Compass‑om ili Atlas UI i proverite dokumente.
+4. U Compass‑u probajte filtere:
+   - Promenite polje direktno u dokumentu (edit) i proverite GET /recepti u API‑ju.
+   - Obrišite jedan dokument i proverite da li se menja rezultat API‑ja.
+   - Testirati query-e direktno u Atlasu ili Compassu
+5. U students proejktu ubacite 15+ studenata (različiti gradovi i uzrasti).
+6. Testirajte query‑e (cities, excludeCities, minAge, nameContains, pagination).
+7. Napišite kratko objašnjenje (u *.md ili *.txt ili bilo koji file po zelji) kako funkcioniše paginacija iz datog primera i kako frontend može da poziva API za sledeću stranicu (u tom istom file-u napisati sta nije jasno takodje kod paginacije).
